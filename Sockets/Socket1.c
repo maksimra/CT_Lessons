@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <string.h>
 #include <sys/un.h>
 #include <unistd.h>
 
-int main (int argc, char ** argv)
+int main (const int argc, const char** argv)
 /* Полюбоваться на созданный сокет man 2 socket man 2 bind*/
 {
 	int sock;
@@ -17,18 +18,20 @@ int main (int argc, char ** argv)
 		return 1;
 	}
 
-	sock = socket (????UNIX, SOCK_STREAM, 0);
+    /* Создаём сокет */
+	sock = socket (AF_UNIX, SOCK_STREAM, 0);
 	if (sock == -1)
 	{
 		fprintf (stderr, "socket() error\n");
-		return 1;
+		return EXIT_FAILURE;
 	}
 
-	saddr.sun_family = ????_UNIX;
-	/* Присвоить массив в структуре нельзя, но можно скопировать содержимое.*/
-  saddr.sun_path = *argv[1];
+	saddr.sun_family = AF_UNIX;
 
-	if (bind (sock, (struct sockaddr *) &saddr,	SUN_LEN (&saddr)) == -1)
+	/* Присвоить массив в структуре нельзя, но можно скопировать содержимое.*/
+    strcpy (saddr.sun_path, argv[1]);
+
+	if (bind (sock, (struct sockaddr *) &saddr,	sizeof saddr) == -1)
 	{
 		fprintf (stderr, "bind() error\n");
 		return 1;
@@ -38,7 +41,8 @@ int main (int argc, char ** argv)
 	fgetc (stdin);
 
 	int cl = close (sock);
-  /* Зачем нужна эта команда */
+
+    /* Удаление файла сокета */
 	int un = unlink (argv[1]);
 	return 0;
 }
